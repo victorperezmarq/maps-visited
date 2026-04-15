@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Lugar } from '@/types/lugar'
+import { Lugar, LugarInsert } from '@/types/lugar'
 
 const Mapa = dynamic(() => import('./Mapa'), {
     ssr: false,
@@ -14,8 +14,10 @@ const Mapa = dynamic(() => import('./Mapa'), {
 
 type Props = {
     lugares: Lugar[]
+    onCrear: (lugar: LugarInsert) => void
+    onBorrar: (id: string) => void
 }
 
-export default function MapaWrapper({ lugares }: Props) {
-    return <Mapa lugares={lugares} />
+export default function MapaWrapper({ lugares, onCrear, onBorrar }: Props) {
+    return <Mapa lugares={lugares} onCrear={onCrear} onBorrar={onBorrar} />
 }

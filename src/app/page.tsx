@@ -1,43 +1,59 @@
-import MapaWrapper from '@/components/MapaWrapper'
-import { Lugar } from '@/types/lugar'
+'use client'
 
-// Datos de prueba para ver el mapa funcionando sin auth
-const lugaresPrueba: Lugar[] = [
-  {
-    id: '1',
-    user_id: 'test',
-    nombre: 'Sevilla',
-    descripcion: 'La mejor ciudad',
-    categoria: 'ciudad',
-    valoracion: 5,
-    latitud: 37.3886,
-    longitud: -5.9823,
-    foto_url: null,
-    estado: 'visitado',
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    user_id: 'test',
-    nombre: 'Sierra Nevada',
-    descripcion: 'Ideal para esquiar',
-    categoria: 'naturaleza',
-    valoracion: 4,
-    latitud: 37.0539,
-    longitud: -3.3936,
-    foto_url: null,
-    estado: 'pendiente',
-    created_at: new Date().toISOString(),
-  },
-]
+import MapaWrapper from '@/components/MapaWrapper'
+import PanelFiltros from '@/components/PanelFiltros'
+import { useLugares } from '@/hooks/useLugares'
+import { useFiltros } from '@/hooks/useFiltros'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
+  const { lugares, cargando, crearLugar, borrarLugar } = useLugares()
+  const { filtros, lugaresFiltrados, actualizarFiltro, resetearFiltros, hayFiltrosActivos } = useFiltros(lugares)
+  const supabase = createClient()
+  const router = useRouter()
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
+
+  if (cargando) return (
+    <main className="flex h-screen items-center justify-center">
+      <p className="text-gray-400">Cargando...</p>
+    </main>
+  )
+
   return (
-    <main className="flex flex-col h-screen p-4 gap-4">
-      <h1 className="text-2xl font-bold">🗺️ Mis Lugares</h1>
-      <div className="flex-1">
-        <MapaWrapper lugares={lugaresPrueba} />
+    <main className="flex flex-col h-screen p-4 gap-3">
+
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">🗺️ Mis Lugares</h1>
+        <button
+          onClick={handleLogout}
+          className="text-sm text-gray-400 hover:text-gray-600 border rounded-lg px-3 py-1.5 transition-colors"
+        >
+          Cerrar sesión
+        </button>
       </div>
+
+      <PanelFiltros
+        filtros={filtros}
+        onChange={actualizarFiltro}
+        onReset={resetearFiltros}
+        hayFiltrosActivos={hayFiltrosActivos}
+        totalVisible={lugaresFiltrados.length}
+        totalTotal={lugares.length}
+      />
+
+      <div className="flex-1">
+        <MapaWrapper
+          lugares={lugaresFiltrados}
+          onCrear={crearLugar}
+          onBorrar={borrarLugar}
+        />
+      </div>
+
     </main>
   )
 }
